@@ -1,0 +1,196 @@
+---
+title: "Homework Assignment #4: Prioritizing Potential Aquaculture"
+subtitle: "Suitability Function"
+author: "Carmen Hoyt"
+date: last-modified
+execute: 
+  warning: false
+  messages: false
+format:
+  html:
+    toc: true
+    code-fold: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Import packages
+```{r}
+#| code-summary: Expand code
+library(here)
+library(tidyverse)
+library(sf)
+library(tmap)
+library(dplyr)
+library(kableExtra)
+library(terra)
+library(patchwork)
+library(tmaptools)
+```
+
+## Read in data
+```{r}
+#| code-summary: Expand code
+# Read in EEZ data
+west_coast_eez <- read_sf(here::here("data", "wc_regions_clean.shp"))
+
+# Read in and rasterize bathymetry data
+bathymetry <- stars::read_stars(here::here("data", "depth.tif"))
+bathymetry <- rast(bathymetry)
+
+# Read in and rasterize SST (sea surface temp) data
+sst_rasters <- list.files(here("data"), pattern = glob2rx("average_annual*"), full.names = TRUE)
+
+for (i in seq_along(sst_rasters)) {
+  raster <- stars::read_stars(sst_rasters[i])
+  raster <- rast(raster)
+  raster_name <- paste0("sst", str_sub(sst_rasters[i], -9 ,-5))
+  if (st_crs(west_coast_eez) == st_crs(raster)) {
+  print("The CRS match! Good to go.")
+  } else {
+  raster <- project(raster, crs(west_coast_eez))
+  }
+  try(if(st_crs(west_coast_eez) != st_crs(raster)) stop("CRS doesn't match."))
+  assign(raster_name, raster)
+}
+
+# Stack SST rasters
+sst <- c(sst_2008, sst_2009, sst_2010, sst_2011, sst_2012)
+
+# Find mean SST
+avg_sst <- mean(sst, na.rm = TRUE)
+
+# Convert from Kelvin to Celsius
+avg_sst <- avg_sst - 273.15
+
+# Clip bathymetry to same extent as SST
+depth <- bathymetry[avg_sst, drop = FALSE]
+
+# Resample depth to match SST resolution
+depth_resample <- terra::resample(depth, y = avg_sst, method = "near")
+
+# Stack SST and depth rasters
+stack <- c(sst, depth_resample)
+```
+
+## Suitability Function
+
+The function `suitability()` takes the following arguments (in order):
+
+- `species_name`: the name of the species (as a string)
+
+- `min_temp`: minimum sea surface temperature (degrees Celsius)
+
+- `max_temp`: maximum sea surface temperature (degrees Celsius)
+
+- `min_depth`: the absolute value of the shallowest preferred depth (meters)
+
+- `max_depth`: the absolute value of the deepest preferred depth (meters)
+
+The final product is a map of West Coast EEZ regions colored by area (km^2) associated with suitable growing conditions for the species of interest. 
+
+Example: `suitability("Abalone", 8, 18, 0, 24)` where:
+
+- `species_name`: "Abalone"
+
+- `min_temp`: 8 (degrees C)
+
+- `max_temp`: 18 (degrees C)
+
+- `min_depth`: 0 (meters)
+
+- `max_depth`: 24 (meters)
+
+```{r}
+#| code-summary: Expand code
+# Create suitability function
+suitability <- function(species_name, min_temp, max_temp, min_depth, max_depth) {
+  
+  # Save species name
+  species_name = species_name
+  
+  # Reclassify temp raster for suitable temperatures
+  rcl_temp <- matrix(c(-Inf, min_temp, 0, # min, max, group
+               min_temp, max_temp, 1,
+               max_temp, Inf, 0),
+             ncol = 3, byrow = TRUE)
+
+  sst_suitable <- terra::classify(avg_sst, rcl = rcl_temp)
+
+  # Reclassify depth raster for suitable depths
+  rcl_depth <- matrix(c(-Inf, -max_depth, 0, # min, max, group
+               -max_depth, -min_depth, 1,
+               -min_depth, Inf, 0),
+             ncol = 3, byrow = TRUE)
+
+  depth_suitable <- terra::classify(depth_resample, rcl = rcl_depth)
+
+  # Stack the two reclassified temp and depth rasters and multiply to find where suitability overlaps 
+  fun <- function(x,y){return(x*y)}
+  stack <- c(sst_suitable, depth_suitable)
+  suitable_raster <- lapp(stack, fun)
+
+  # Replace 0 values with NA
+  suitable_raster[suitable_raster == 0] <- NA
+  
+  # Find suitable area masked to US EEZ extent
+  suitable_raster <- mask(suitable_raster, west_coast_eez)
+  
+  # Rasterize the EEZ to calculate area
+  eez_raster <- rasterize(west_coast_eez, stack, "rgn")
+  
+  # Find the size of each cell in suitable_raster
+  cell_size <- cellSize(suitable_raster, unit = "km")
+  
+  # Calculate total suitable area for each EEZ and save as a dataframe
+  area <- data.frame((zonal(cell_size*suitable_raster, 
+                                      z = eez_raster, 
+                                      fun ="sum", 
+                                      na.rm = TRUE)))
+  
+  # Join to EEZ vector to create geo-dataframe to map
+  map_df <- left_join(west_coast_eez, area, by = 'rgn') %>%
+  select('rgn', 'area', 'area_km2') %>%
+  mutate(area_rounded = round(area),
+         Percent = round(area/area_km2*100, 2)) %>%
+  mutate(labels = paste0(rgn, ": ", "\n", area_rounded, " km^2"))
+  
+  # Map suitable area by EEZ region
+  suitability_map <- tm_shape(avg_sst) +
+    tm_raster(palette = "Greys",
+            title = "Mean SST (C)") +
+    tm_shape(map_df) +
+    tm_polygons(title = "Suitable Area \n(km^2)",
+              col = 'area_rounded',
+              palette = "Purples",
+              legend.show = TRUE) +
+  tm_text("labels", size = 1/2) +
+  tm_layout(main.title = paste("Suitable", species_name, "Habitat"),
+          legend.position = c("right", "top"),
+          bg.color = "white",
+          legend.outside = FALSE) +
+  tm_compass(position = c("left", "bottom")) +
+  tm_scale_bar(position = c("left", "bottom"))
+  map_name <- paste0(species_name, "_map")
+  assign(map_name, suitability_map)
+  
+  return(suitability_map)
+}
+```
+
+## Use Function
+```{r}
+#| code-summary: Expand code
+suitability("Oyster", 11, 30, 0, 70)
+suitability("Abalone", 8, 18, 0, 24) 
+```
+
+## Data Sources
+
+| Data | Citation | Link |
+|------------------|------------------|------------------|------------------|
+| Species Requirements for Red Abalone | Bisby, F.A., M.A. Ruggiero, K.L. Wilson, M. Cachuela-Palacio, S.W. Kimani, Y.R. Roskov, A. Soulier-Perkins and J. van Hertum. 2005. (via SeaLifeBase) | [https://www.sealifebase.ca/summary/Haliotis-rufescens.html](https://www.sealifebase.ca/summary/Haliotis-rufescens.html) |
+| Sea Surface Temperature Data | NOAA Coral Reef Watch. 2018, updated daily. Daily Global 5km Satellite Sea Surface Temperature Anomaly (Version 3.1, released August 1, 2018). College Park, Maryland, USA: NOAA Coral Reef Watch | [https://coralreefwatch.noaa.gov/product/vs/data.php](https://coralreefwatch.noaa.gov/product/vs/data.php) | 
+| Bathymetry Data | GEBCO Compilation Group (2024) GEBCO 2024 Grid (doi:10.5285/1c44ce99-0a0d-5f4f-e063-7086abc0ea0f) | [https://www.gebco.net/data_and_products/gridded_bathymetry_data/#area](https://www.gebco.net/data_and_products/gridded_bathymetry_data/#area) |
+| EEZ Boundary | MarineRegions. nd. EEZ Boundaries. | [https://www.marineregions.org/eez.php](https://www.marineregions.org/eez.php) |
+
