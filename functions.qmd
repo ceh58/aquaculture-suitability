@@ -223,5 +223,3 @@ Gentry, R. R., Froehlich, H. E., Grimm, D., Kareiva, P., Parke, M., Rust, M., Ga
 
 # Acknowledgements
 This analysis was adopted from [EDS223: Geospatial Analysis & Remote Sensing Homework #4](https://eds-223-geospatial.github.io/assignments/HW4.html). Thank you to Ruth Oliver [@ryoliver](https://github.com/ryoliver) for preparing the data hosted on Google Drive.
-
-
