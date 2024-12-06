@@ -11,7 +11,7 @@ This analysis harnesses the following valuable skills:
 - Using `for` loops to streamline analysis
 - Reclassifying rasters
 - Raster algebra
-- Calculating area by weighting cell size using `cellSize` 
+- Weighting raster cell size using `cellSize` 
 - Finding area per EEZ group using `zonal()`
 
 ## Repository Structure
