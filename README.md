@@ -7,9 +7,12 @@ Aquaculture has the potential to match the production of wild fisheries using ju
 ## Skills
 This analysis harnesses the following valuable skills:
 
-- Creating functions for
+- Creating functions to generalize workflow
+- Using `for` loops to streamline analysis
 - Reclassifying rasters
-- Clipping raskers
+- Raster algebra
+- Calculating area by weighting cell size using `cellSize` 
+- Finding area per EEZ group using `zonal()`
 
 ## Repository Structure
 ```
