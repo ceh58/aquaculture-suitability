@@ -35,17 +35,17 @@ Bathymetry data was originally downloaded from the [General Bathymetric Chart of
 
 EEZ boundaries were downloaded as a shapefile from [Marineregions.org](https://www.marineregions.org/eez.php).
 
-## Data Sources
+## References
 
-| Data | Citation | Link |
-|------------------|------------------|------------------|------------------|
-| Species Requirements for Red Abalone | Bisby, F.A., M.A. Ruggiero, K.L. Wilson, M. Cachuela-Palacio, S.W. Kimani, Y.R. Roskov, A. Soulier-Perkins and J. van Hertum. 2005. (via SeaLifeBase) | [https://www.sealifebase.ca/summary/Haliotis-rufescens.html](https://www.sealifebase.ca/summary/Haliotis-rufescens.html) |
-| Sea Surface Temperature Data | NOAA Coral Reef Watch. 2018, updated daily. Daily Global 5km Satellite Sea Surface Temperature Anomaly (Version 3.1, released August 1, 2018). College Park, Maryland, USA: NOAA Coral Reef Watch | [https://coralreefwatch.noaa.gov/product/vs/data.php](https://coralreefwatch.noaa.gov/product/vs/data.php) | 
-| Bathymetry Data | GEBCO Compilation Group (2024) GEBCO 2024 Grid (doi:10.5285/1c44ce99-0a0d-5f4f-e063-7086abc0ea0f) | [https://www.gebco.net/data_and_products/gridded_bathymetry_data/#area](https://www.gebco.net/data_and_products/gridded_bathymetry_data/#area) |
-| EEZ Boundary | MarineRegions. nd. EEZ Boundaries. | [https://www.marineregions.org/eez.php](https://www.marineregions.org/eez.php) |
+Bisby, F.A., M.A. Ruggiero, K.L. Wilson, M. Cachuela-Palacio, S.W. Kimani, Y.R. Roskov, A. Soulier-Perkins and J. van Hertum. 2005. (via [SeaLifeBase](https://www.sealifebase.ca/summary/Haliotis-rufescens.html)). 
 
-# References
-Gentry, R. R., Froehlich, H. E., Grimm, D., Kareiva, P., Parke, M., Rust, M., Gaines, S. D., & Halpern, B. S. Mapping the global potential for marine aquaculture. Nature Ecology & Evolution, 1, 1317-1324 (2017) [https://www.nature.com/articles/s41559-017-0257-9](https://www.nature.com/articles/s41559-017-0257-9)
+[GEBCO](https://www.gebco.net/data_and_products/gridded_bathymetry_data/#area) Compilation Group (2024) GEBCO 2024 Grid (doi:10.5285/1c44ce99-0a0d-5f4f-e063-7086abc0ea0f)
+
+Gentry, R. R., Froehlich, H. E., Grimm, D., Kareiva, P., Parke, M., Rust, M., Gaines, S. D., & Halpern, B. S. Mapping the global potential for marine aquaculture. Nature Ecology & Evolution, 1, 1317-1324 (2017) [https://www.nature.com/articles/s41559-017-0257-9](https://www.nature.com/articles/s41559-017-0257-9).
+
+[MarineRegions](https://www.marineregions.org/eez.php). nd. EEZ Boundaries.
+
+NOAA Coral Reef Watch. 2018, updated daily. Daily Global 5km Satellite Sea Surface Temperature Anomaly (Version 3.1, released August 1, 2018). College Park, Maryland, USA: [NOAA Coral Reef Watch](https://coralreefwatch.noaa.gov/product/vs/data.php).
 
 # Acknowledgements
 This analysis was adopted from [EDS223: Geospatial Analysis & Remote Sensing Homework #4](https://eds-223-geospatial.github.io/assignments/HW4.html). Thank you to Ruth Oliver [@ryoliver](https://github.com/ryoliver) for preparing the data hosted on Google Drive.
